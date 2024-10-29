@@ -3,7 +3,7 @@
 import logging
 
 from zigpy.profiles import zha
-from zigpy.quirks.v2 import add_to_registry_v2
+from zigpy.quirks.v2 import QuirkBuilder
 from zigpy.quirks.v2.homeassistant import EntityType
 from zigpy.zcl.clusters.general import Basic, Groups, Identify, OnOff, Ota, Scenes, Time
 
@@ -637,10 +637,7 @@ class TuyaCloneCover0601(TuyaWindowCover):
         }
     }
 
-
-def register_v2_quirks() -> None:
-    """Register v2 Quirks."""
-
+(
     # Tuya window cover device.
     #
     # This variant supports:
@@ -653,7 +650,7 @@ def register_v2_quirks() -> None:
     # TuyaNewManufClusterForWindowCover which can handle multiple updates in one zigby frame.
     #
     # "_TZE200_eevqq1uv", "TS0601" - Zemismart ZM25R3 roller blind motor
-    add_to_registry_v2("_TZE200_68nvbio9", "TS0601"
+    QuirkBuilder("_TZE200_68nvbio9", "TS0601"
     ).also_applies_to("_TZE200_eevqq1uv", "TS0601"
     ).replaces(TuyaNewManufClusterForWindowCover
     ).adds(TuyaNewWindowCoverControl
@@ -665,6 +662,7 @@ def register_v2_quirks() -> None:
         {"direction": CoverCommandStepDirection.Open},
         entity_type=EntityType.STANDARD,
         translation_key="small_step_open",
+        fallback_name="Small step open",
     ).command_button(
         WINDOW_COVER_COMMAND_SMALL_STEP_NAME,
         TuyaNewWindowCoverControl.cluster_id,
@@ -672,38 +670,40 @@ def register_v2_quirks() -> None:
         {"direction": CoverCommandStepDirection.Close},
         entity_type=EntityType.STANDARD,
         translation_key="small_step_close",
+        fallback_name="Small step close",
     ).enum(
         ATTR_COVER_DIRECTION_SETTING_NAME,
         CoverSettingMotorDirection,
         TuyaNewWindowCoverControl.cluster_id,
         translation_key="motor_direction",
+        fallback_name="Motor direction",
     ).command_button(
         WINDOW_COVER_COMMAND_UPDATE_LIMITS_NAME,
         TuyaNewWindowCoverControl.cluster_id,
         None,
         {"operation": CoverSettingLimitOperation.SetOpen},
         translation_key="set_open_limit",
+        fallback_name="Set open limit",
     ).command_button(
         WINDOW_COVER_COMMAND_UPDATE_LIMITS_NAME,
         TuyaNewWindowCoverControl.cluster_id,
         None,
         {"operation": CoverSettingLimitOperation.SetClose},
         translation_key="set_close_limit",
+        fallback_name="Set close limit",
     ).command_button(
         WINDOW_COVER_COMMAND_UPDATE_LIMITS_NAME,
         TuyaNewWindowCoverControl.cluster_id,
         None,
         {"operation": CoverSettingLimitOperation.ClearOpen},
         translation_key="clear_open_limit",
+        fallback_name="Clear open limit",
     ).command_button(
         WINDOW_COVER_COMMAND_UPDATE_LIMITS_NAME,
         TuyaNewWindowCoverControl.cluster_id,
         None,
         {"operation": CoverSettingLimitOperation.ClearClose},
         translation_key="clear_close_limit",
-    )
-
-
-(
-    register_v2_quirks()
+        fallback_name="Clear close limit",
+    ).add_to_registry()
 )
