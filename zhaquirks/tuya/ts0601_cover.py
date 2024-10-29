@@ -637,6 +637,7 @@ class TuyaCloneCover0601(TuyaWindowCover):
         }
     }
 
+
 (
     # Tuya window cover device.
     #
@@ -650,12 +651,12 @@ class TuyaCloneCover0601(TuyaWindowCover):
     # TuyaNewManufClusterForWindowCover which can handle multiple updates in one zigby frame.
     #
     # "_TZE200_eevqq1uv", "TS0601" - Zemismart ZM25R3 roller blind motor
-    QuirkBuilder("_TZE200_68nvbio9", "TS0601"
-    ).also_applies_to("_TZE200_eevqq1uv", "TS0601"
-    ).replaces(TuyaNewManufClusterForWindowCover
-    ).adds(TuyaNewWindowCoverControl
-    ).adds(TuyaPowerConfigurationCluster
-    ).command_button(
+    QuirkBuilder("_TZE200_68nvbio9", "TS0601")
+    .also_applies_to("_TZE200_eevqq1uv", "TS0601")
+    .replaces(TuyaNewManufClusterForWindowCover)
+    .adds(TuyaNewWindowCoverControl)
+    .adds(TuyaPowerConfigurationCluster)
+    .command_button(
         WINDOW_COVER_COMMAND_SMALL_STEP_NAME,
         TuyaNewWindowCoverControl.cluster_id,
         None,
@@ -663,7 +664,8 @@ class TuyaCloneCover0601(TuyaWindowCover):
         entity_type=EntityType.STANDARD,
         translation_key="small_step_open",
         fallback_name="Small step open",
-    ).command_button(
+    )
+    .command_button(
         WINDOW_COVER_COMMAND_SMALL_STEP_NAME,
         TuyaNewWindowCoverControl.cluster_id,
         None,
@@ -671,39 +673,45 @@ class TuyaCloneCover0601(TuyaWindowCover):
         entity_type=EntityType.STANDARD,
         translation_key="small_step_close",
         fallback_name="Small step close",
-    ).enum(
+    )
+    .enum(
         ATTR_COVER_DIRECTION_SETTING_NAME,
         CoverSettingMotorDirection,
         TuyaNewWindowCoverControl.cluster_id,
         translation_key="motor_direction",
         fallback_name="Motor direction",
-    ).command_button(
+    )
+    .command_button(
         WINDOW_COVER_COMMAND_UPDATE_LIMITS_NAME,
         TuyaNewWindowCoverControl.cluster_id,
         None,
         {"operation": CoverSettingLimitOperation.SetOpen},
         translation_key="set_open_limit",
         fallback_name="Set open limit",
-    ).command_button(
+    )
+    .command_button(
         WINDOW_COVER_COMMAND_UPDATE_LIMITS_NAME,
         TuyaNewWindowCoverControl.cluster_id,
         None,
         {"operation": CoverSettingLimitOperation.SetClose},
         translation_key="set_close_limit",
         fallback_name="Set close limit",
-    ).command_button(
+    )
+    .command_button(
         WINDOW_COVER_COMMAND_UPDATE_LIMITS_NAME,
         TuyaNewWindowCoverControl.cluster_id,
         None,
         {"operation": CoverSettingLimitOperation.ClearOpen},
         translation_key="clear_open_limit",
         fallback_name="Clear open limit",
-    ).command_button(
+    )
+    .command_button(
         WINDOW_COVER_COMMAND_UPDATE_LIMITS_NAME,
         TuyaNewWindowCoverControl.cluster_id,
         None,
         {"operation": CoverSettingLimitOperation.ClearClose},
         translation_key="clear_close_limit",
         fallback_name="Clear close limit",
-    ).add_to_registry()
+    )
+    .add_to_registry()
 )

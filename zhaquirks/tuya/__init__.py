@@ -1241,8 +1241,12 @@ class TuyaWindowCoverControl(LocalDataCluster, WindowCovering):
 
     # Add additional attributes for direction
     attributes = WindowCovering.attributes.copy()
-    attributes.update({ATTR_COVER_DIRECTION_SETTING: (ATTR_COVER_DIRECTION_SETTING_NAME, t.enum8)})
-    attributes.update({ATTR_COVER_INVERTED_SETTING: (ATTR_COVER_INVERTED_SETTING_NAME, t.Bool)})
+    attributes.update(
+        {ATTR_COVER_DIRECTION_SETTING: (ATTR_COVER_DIRECTION_SETTING_NAME, t.enum8)}
+    )
+    attributes.update(
+        {ATTR_COVER_INVERTED_SETTING: (ATTR_COVER_INVERTED_SETTING_NAME, t.Bool)}
+    )
 
     def __init__(self, *args, **kwargs):
         """Initialize instance."""
@@ -1359,7 +1363,7 @@ class TuyaWindowCover(CustomDevice):
     tuya_cover_command = {
         WINDOW_COVER_COMMAND_UPOPEN: 0x0000,
         WINDOW_COVER_COMMAND_DOWNCLOSE: 0x0002,
-        WINDOW_COVER_COMMAND_STOP: 0x0001
+        WINDOW_COVER_COMMAND_STOP: 0x0001,
     }
 
     # For all covers which need their position inverted by default

@@ -97,7 +97,10 @@ async def test_cover_move_commands(
     assert len(tuya_listener.attribute_updates) == 0
 
     with mock.patch.object(
-        tuya_cluster.endpoint, "request", return_value=foundation.Status.SUCCESS, autospec=True
+        tuya_cluster.endpoint,
+        "request",
+        return_value=foundation.Status.SUCCESS,
+        autospec=True,
     ) as m1:
         rsp = await cover_cluster.command(command, *args, **kwargs)
 
@@ -111,7 +114,7 @@ async def test_cover_move_commands(
             expect_reply=True,
             use_ieee=False,
             ask_for_ack=None,
-            priority=PacketPriority.NORMAL
+            priority=PacketPriority.NORMAL,
         )
         assert rsp.status == foundation.Status.SUCCESS
 
@@ -243,7 +246,10 @@ async def test_cover_attributes_set(
     cover_cluster = device.endpoints[1].window_covering
 
     with mock.patch.object(
-        tuya_cluster.endpoint, "request", return_value=foundation.Status.SUCCESS, autospec=True
+        tuya_cluster.endpoint,
+        "request",
+        return_value=foundation.Status.SUCCESS,
+        autospec=True,
     ) as m1:
         write_results = await cover_cluster.write_attributes({name: value})
 
@@ -257,7 +263,7 @@ async def test_cover_attributes_set(
             expect_reply=False,
             use_ieee=False,
             ask_for_ack=None,
-            priority=PacketPriority.NORMAL
+            priority=PacketPriority.NORMAL,
         )
         assert write_results == [
             [foundation.WriteAttributesStatusRecord(foundation.Status.SUCCESS)]
@@ -312,7 +318,10 @@ async def test_cover_invert(
 
     # Now send a command to set that value and assert we send the frame we expect
     with mock.patch.object(
-        tuya_cluster.endpoint, "request", return_value=foundation.Status.SUCCESS, autospec=True
+        tuya_cluster.endpoint,
+        "request",
+        return_value=foundation.Status.SUCCESS,
+        autospec=True,
     ) as m1:
         rsp = await cover_cluster.command(0x05, expected_received_value)
 
@@ -326,7 +335,7 @@ async def test_cover_invert(
             expect_reply=True,
             use_ieee=False,
             ask_for_ack=None,
-            priority=PacketPriority.NORMAL
+            priority=PacketPriority.NORMAL,
         )
         assert rsp.status == foundation.Status.SUCCESS
 

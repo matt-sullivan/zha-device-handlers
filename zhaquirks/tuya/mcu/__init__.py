@@ -95,7 +95,8 @@ class CommandToDPValueMappingCallback(Protocol):
         self,
         command_id: Union[foundation.GeneralCommand, int, t.uint8_t],
         *args,
-        **kwargs: Any) -> TuyaData:
+        **kwargs: Any,
+    ) -> TuyaData:
         """Call back with self, command id, ordered and named variable args."""
 
 
@@ -822,7 +823,6 @@ class TuyaNewWindowCoverControl(
         """Translate the tuya data point value to use when commanded to move."""
         return CoverMotorCommand(self.tuya_cover_command[command_id])
 
-
     def lift_percent_command_dp_value(
         self,
         _command_id: Union[foundation.GeneralCommand, int, t.uint8_t],
@@ -831,7 +831,6 @@ class TuyaNewWindowCoverControl(
     ):
         """Compute the tuya data point value to apply when given a set lift percent command."""
         return self._compute_lift_percent(args[0])
-
 
     def update_lift_percent(self, raw_value: int):
         """Update lift percent attribute when it's data point data is received.
@@ -842,7 +841,6 @@ class TuyaNewWindowCoverControl(
 
         new_attribute_value = self._compute_lift_percent(raw_value)
         self.update_attribute(ATTR_COVER_LIFTPERCENT_NAME, new_attribute_value)
-
 
     def _compute_lift_percent(self, input_value: int):
         """Convert/invert lift percent when needed.
@@ -859,11 +857,9 @@ class TuyaNewWindowCoverControl(
         invert = self._attr_cache.get(ATTR_COVER_INVERTED_SETTING) == 1
         return input_value if invert else 100 - input_value
 
-
     command_to_dp: dict[
         Union[foundation.GeneralCommand, int, t.uint8_t], CommandToDPValueMapping
     ] = {
-
         WINDOW_COVER_COMMAND_UPOPEN: CommandToDPValueMapping(
             TUYA_DP_ID_CONTROL, move_command_dp_value
         ),
