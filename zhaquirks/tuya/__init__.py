@@ -56,12 +56,14 @@ TUYA_LEVEL_COMMAND = 514
 
 LEVEL_EVENT = "level_event"
 TUYA_MCU_COMMAND = "tuya_mcu_command"
+TUYA_MCU_SET_DATAPOINTS = "tuya_mcu_set_datapoints"
 
 # Rotating for remotes
 STOP = "stop"  # To constants
 
 # ---------------------------------------------------------
 # Value for dp_type
+# https://developer.tuya.com/en/docs/iot/tuya-zigbee-universal-docking-access-standard?id=K9ik6zvofpzql
 # ---------------------------------------------------------
 # ID    Name            Description
 # ---------------------------------------------------------
@@ -78,22 +80,29 @@ TUYA_DP_TYPE_STRING = 0x0300
 TUYA_DP_TYPE_ENUM = 0x0400
 TUYA_DP_TYPE_FAULT = 0x0500
 # ---------------------------------------------------------
-# Value for dp_identifier (These are device specific)
+# Value for dp_identifier. These are device type and potentially device specific.
+# The ones we use here appear to be consistent for all covers we support.
+# https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
 # ---------------------------------------------------------
 # ID    Name               Type    Description
 # ---------------------------------------------------------
 # 0x01  control            enum    open, stop, close, continue
 # 0x02  percent_control    value   0-100% control
 # 0x03  percent_state      value   Report from motor about current percentage
-# 0x04  control_back       enum    Configures motor direction (untested)
-# 0x05  work_state         enum    Motor Direction Setting
+# 0x05  control_back       enum    Configures motor direction
 # 0x06  situation_set      enum    Configures if 100% equals to fully closed or fully open (untested)
 # 0x07  fault              bitmap  Anything but 0 means something went wrong (untested)
+# 13    ?                  value   Battery charge percentage
+# 16    border             enum    set open limit, set close limit, clear open, clear close, clear both
+# 20    click control      enum    move up/open a small step, move down/close
 TUYA_DP_ID_CONTROL = 0x01
 TUYA_DP_ID_PERCENT_CONTROL = 0x02
 TUYA_DP_ID_PERCENT_STATE = 0x03
 TUYA_DP_ID_DIRECTION_CHANGE = 0x05
 TUYA_DP_ID_COVER_INVERTED = 0x06
+TUYA_DP_ID_BATTERY_PERCENT = 13
+TUYA_DP_ID_LIMIT_SETTINGS = 16
+TUYA_DP_ID_SMALL_STEP = 20
 # ---------------------------------------------------------
 # Window Cover Server Commands
 # ---------------------------------------------------------
@@ -102,13 +111,41 @@ WINDOW_COVER_COMMAND_DOWNCLOSE = 0x0001
 WINDOW_COVER_COMMAND_STOP = 0x0002
 WINDOW_COVER_COMMAND_LIFTPERCENT = 0x0005
 WINDOW_COVER_COMMAND_CUSTOM = 0x0006
+
+# TODO - What are appropriate ids for a custom commands we introduce that aren't part
+# of the zigbee spec, nor tuya manufacturer specific extensions?
+# I've used a high uint8 number to try to reduce the chance of conflicts with future
+# zigbee/tuya changes. (I believe it needs to be a uint8 to pass to ZclCommandDef,
+# despite other ids being declared as 16 bits.)
+WINDOW_COVER_COMMAND_SMALL_STEP_OPEN = 0xF0
+WINDOW_COVER_COMMAND_SMALL_STEP_OPEN_NAME = "small_step_open"
+WINDOW_COVER_COMMAND_SMALL_STEP_CLOSE = 0xF1
+WINDOW_COVER_COMMAND_SMALL_STEP_CLOSE_NAME = "small_step_close"
+WINDOW_COVER_COMMAND_SET_OPEN_LIMIT = 0xF2
+WINDOW_COVER_COMMAND_SET_OPEN_LIMIT_NAME = "set_open_limit"
+WINDOW_COVER_COMMAND_SET_CLOSE_LIMIT = 0xF3
+WINDOW_COVER_COMMAND_SET_CLOSE_LIMIT_NAME = "set_close_limit"
+WINDOW_COVER_COMMAND_CLEAR_OPEN_LIMIT = 0xF4
+WINDOW_COVER_COMMAND_CLEAR_OPEN_LIMIT_NAME = "clear_open_limit"
+WINDOW_COVER_COMMAND_CLEAR_CLOSE_LIMIT = 0xF5
+WINDOW_COVER_COMMAND_CLEAR_CLOSE_LIMIT_NAME = "clear_close_limit"
+WINDOW_COVER_COMMAND_CLEAR_BOTH_LIMITS = 0xF6
+WINDOW_COVER_COMMAND_CLEAR_BOTH_LIMITS_NAME = "clear_both_limits"
+
 # ---------------------------------------------------------
 # TUYA Cover Custom Values
 # ---------------------------------------------------------
 COVER_EVENT = "cover_event"
 ATTR_COVER_POSITION = 0x0008
+ATTR_COVER_POSITION_NAME = "current_position_lift_percentage"
+ATTR_COVER_MOTOR_STATUS = 0x8000
+ATTR_COVER_MOTOR_STATUS_NAME = "motor_status"
 ATTR_COVER_DIRECTION = 0x8001
+ATTR_COVER_DIRECTION_NAME = "motor_direction"
+# Note: I'd like to rename inverted to lift_percent_inverted (since it's a little ambiguous with
+# motor_direction,) but I'm not sure if that will lose the value for existing instances
 ATTR_COVER_INVERTED = 0x8002
+ATTR_COVER_INVERTED_NAME = "cover_inverted"
 
 # ---------------------------------------------------------
 # TUYA Switch Custom Values
@@ -1191,7 +1228,11 @@ class TuyaZB1888Cluster(CustomCluster):
 
 # Tuya Window Cover Implementation
 class TuyaManufacturerWindowCover(TuyaManufCluster):
-    """Manufacturer Specific Cluster for cover device."""
+    """Manufacturer Specific Cluster for cover device.
+
+    Consider using TuyaWindowCoverManufClusterV2 instead, it's based on a newer TuyaMCUCluster
+    base class and can handle multiple dp updates in one zigby frame
+    """
 
     def handle_cluster_request(
         self,
@@ -1257,7 +1298,11 @@ class TuyaManufacturerWindowCover(TuyaManufCluster):
 
 
 class TuyaWindowCoverControl(LocalDataCluster, WindowCovering):
-    """Manufacturer Specific Cluster of Device cover."""
+    """Window Covering cluster for cover device.
+
+    Consider using TuyaWindowCoverControlV2 instead, it's compatible with the newer
+    TuyaMCUCluster and can handle multiple dp updates in one zigby frame.
+    """
 
     class AttributeDefs(WindowCovering.AttributeDefs):
         """Attribute definitions."""

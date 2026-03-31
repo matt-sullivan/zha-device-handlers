@@ -652,6 +652,12 @@ class TuyaQuirkBuilder(QuirkBuilder):
         is_manufacturer_specific=True,
     ) -> Self:
         """Add an Tuya DataPoint and corresponding AttributeDef."""
+
+        # I'm not sure if it's a bug or by design that the attribute is always added to the quirk
+        # builder mcu cluster (through self.new_attributes), yet ep_attribute can refer to a
+        # different cluster. Given the current design can't add an attribute to a different cluster
+        # I don't think this method should take ep_attribute as a parameter.
+
         self.tuya_attribute(
             dp_id=dp_id,
             attribute_name=attribute_name,

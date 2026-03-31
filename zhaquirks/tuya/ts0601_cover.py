@@ -1,7 +1,9 @@
 """Tuya based cover and blinds."""
 
 from zigpy.profiles import zha
+from zigpy.quirks.v2.homeassistant import EntityType
 import zigpy.types as t
+from zigpy.zcl.clusters.closures import WindowCovering
 from zigpy.zcl.clusters.general import Basic, Groups, Identify, OnOff, Ota, Scenes, Time
 
 from zhaquirks.const import (
@@ -13,13 +15,34 @@ from zhaquirks.const import (
     PROFILE_ID,
 )
 from zhaquirks.tuya import (
+    ATTR_COVER_DIRECTION_NAME,
+    ATTR_COVER_MOTOR_STATUS_NAME,
+    ATTR_COVER_POSITION_NAME,
     TUYA_CLUSTER_ID,
+    TUYA_DP_ID_BATTERY_PERCENT,
+    TUYA_DP_ID_CONTROL,
+    TUYA_DP_ID_DIRECTION_CHANGE,
+    TUYA_DP_ID_LIMIT_SETTINGS,
+    TUYA_DP_ID_PERCENT_CONTROL,
+    TUYA_DP_ID_PERCENT_STATE,
+    TUYA_DP_ID_SMALL_STEP,
+    WINDOW_COVER_COMMAND_CLEAR_CLOSE_LIMIT_NAME,
+    WINDOW_COVER_COMMAND_CLEAR_OPEN_LIMIT_NAME,
+    WINDOW_COVER_COMMAND_SET_CLOSE_LIMIT_NAME,
+    WINDOW_COVER_COMMAND_SET_OPEN_LIMIT_NAME,
+    WINDOW_COVER_COMMAND_SMALL_STEP_CLOSE_NAME,
+    WINDOW_COVER_COMMAND_SMALL_STEP_OPEN_NAME,
     TuyaManufacturerWindowCover,
     TuyaManufCluster,
     TuyaWindowCover,
     TuyaWindowCoverControl,
 )
 from zhaquirks.tuya.builder import TuyaQuirkBuilder
+from zhaquirks.tuya.mcu import (
+    CoverSettingMotorDirection,
+    TuyaWindowCoverControlV2,
+    TuyaWindowCoverManufClusterV2,
+)
 
 
 class TuyaZemismartSmartCover0601(TuyaWindowCover):
@@ -704,4 +727,105 @@ class BorderSetting(t.enum8):
     )
     .skip_configuration()
     .add_to_registry()
+)
+(
+    # Tuya window cover device.
+    #
+    # This variant supports:
+    #     - multiple data points decoded in tuya set_data_response.
+    #     - move small steps open/close
+    #     - set and clear limits,
+    #     - invert direction
+    #     - battery percentage remaining
+    #
+    # All the quirks above are based on TuyaManufacturerWindowCover that only decodes one attribute
+    # from the Tuya set_data_response packet. This quirk is based on TuyaMCUCluster &
+    # TuyaWindowCoverManufClusterV2 which can handle multiple dp updates in one zigby frame.
+    #
+    # "_TZE200_eevqq1uv", "TS0601" - Zemismart ZM25R3 roller blind motor
+    TuyaQuirkBuilder("_TZE200_eevqq1uv", "TS0601")
+    .applies_to("_TZE200_68nvbio9", "TS0601")
+    .adds(TuyaWindowCoverControlV2)
+    .tuya_dp(
+        TUYA_DP_ID_CONTROL, WindowCovering.ep_attribute, ATTR_COVER_MOTOR_STATUS_NAME
+    )
+    .tuya_dp(
+        TUYA_DP_ID_PERCENT_STATE,
+        WindowCovering.ep_attribute,
+        ATTR_COVER_POSITION_NAME,
+        dp_handler="update_lift_percent",
+    )
+    .tuya_dp(
+        TUYA_DP_ID_DIRECTION_CHANGE,
+        WindowCovering.ep_attribute,
+        ATTR_COVER_DIRECTION_NAME,
+    )
+    # Ignore updates from data points that are used as write-only commands to the device, we
+    # don't need attributes to display their values, but they're echoed back in get_data and
+    # would otherwise log debug messages.
+    # Include DP 7 in this list, I don't know what it is, but it's part of set_data_response
+    .tuya_dp_multi(TUYA_DP_ID_PERCENT_CONTROL, [], "ignore_update")
+    .tuya_dp_multi(7, [], "ignore_update")
+    .tuya_dp_multi(TUYA_DP_ID_LIMIT_SETTINGS, [], "ignore_update")
+    .tuya_dp_multi(TUYA_DP_ID_SMALL_STEP, [], "ignore_update")
+    .tuya_battery(dp_id=TUYA_DP_ID_BATTERY_PERCENT)
+    .command_button(
+        WINDOW_COVER_COMMAND_SMALL_STEP_OPEN_NAME,
+        WindowCovering.cluster_id,
+        None,
+        {},
+        entity_type=EntityType.STANDARD,
+        translation_key="small_step_open",
+        fallback_name="Small step open",
+    )
+    .command_button(
+        WINDOW_COVER_COMMAND_SMALL_STEP_CLOSE_NAME,
+        WindowCovering.cluster_id,
+        None,
+        {},
+        entity_type=EntityType.STANDARD,
+        translation_key="small_step_close",
+        fallback_name="Small step close",
+    )
+    .enum(
+        ATTR_COVER_DIRECTION_NAME,
+        CoverSettingMotorDirection,
+        WindowCovering.cluster_id,
+        translation_key="motor_direction",
+        fallback_name="Motor direction",
+    )
+    .command_button(
+        WINDOW_COVER_COMMAND_SET_OPEN_LIMIT_NAME,
+        WindowCovering.cluster_id,
+        None,
+        {},
+        translation_key="set_open_limit",
+        fallback_name="Set open limit",
+    )
+    .command_button(
+        WINDOW_COVER_COMMAND_SET_CLOSE_LIMIT_NAME,
+        WindowCovering.cluster_id,
+        None,
+        {},
+        translation_key="set_close_limit",
+        fallback_name="Set close limit",
+    )
+    .command_button(
+        WINDOW_COVER_COMMAND_CLEAR_OPEN_LIMIT_NAME,
+        WindowCovering.cluster_id,
+        None,
+        {},
+        translation_key="clear_open_limit",
+        fallback_name="Clear open limit",
+    )
+    .command_button(
+        WINDOW_COVER_COMMAND_CLEAR_CLOSE_LIMIT_NAME,
+        WindowCovering.cluster_id,
+        None,
+        {},
+        translation_key="clear_close_limit",
+        fallback_name="Clear close limit",
+    )
+    .skip_configuration()
+    .add_to_registry(replacement_cluster=TuyaWindowCoverManufClusterV2)
 )
